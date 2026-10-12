@@ -250,10 +250,46 @@ const updateSecuritySettings = async (
   return workspace.securitySettings;
 };
 
+const updateProvisioningSettings = async (
+  userId: string,
+  payload: {
+    allowDomainAutoJoin?: boolean;
+    scimEnabled?: boolean;
+    provisioningMethod?: "EMAIL" | "DOMAIN" | "SCIM" | "CSV";
+  }
+) => {
+  const user = await User.findById(userId);
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+
+  const workspace = await Workspace.findOne({
+    $or: [{ _id: user.workspaceId }, { ownerId: user._id }],
+    isDeleted: false,
+  });
+
+  if (!workspace) throw new AppError(httpStatus.NOT_FOUND, "Workspace not found");
+
+  if (payload.allowDomainAutoJoin && !workspace.organization?.domainVerified) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Cannot enable domain auto-join before verifying corporate domain."
+    );
+  }
+
+  workspace.provisioning = {
+    ...workspace.provisioning,
+    ...payload,
+  };
+
+  await workspace.save();
+
+  return workspace.provisioning;
+};
+
 export const WorkspaceServices = {
   getChecklistProgress,
   personalizeWorkspace,
   initiateDomainVerification,
   checkDomainVerification,
   updateSecuritySettings,
+  updateProvisioningSettings,
 };

@@ -75,10 +75,26 @@ const updateSecuritySettings = catchAsync(async (req: Request, res: Response) =>
   });
 });
 
+const updateProvisioningSettings = catchAsync(async (req: Request, res: Response) => {
+  const decodedToken = req.user as JwtPayload;
+  const result = await WorkspaceServices.updateProvisioningSettings(
+    decodedToken.userId,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Provisioning settings updated successfully",
+    data: result,
+  });
+});
+
 export const WorkspaceController = {
   getChecklistProgress,
   personalizeWorkspace,
   initiateDomainVerification,
   checkDomainVerification,
   updateSecuritySettings,
+  updateProvisioningSettings,
 };

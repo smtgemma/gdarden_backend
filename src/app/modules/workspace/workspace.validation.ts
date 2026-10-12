@@ -27,8 +27,15 @@ const securityValidationSchema = z.object({
   sessionTimeoutMinutes: z.number().positive("Timeout must be a positive number").optional(),
 });
 
+const provisioningValidationSchema = z.object({
+  allowDomainAutoJoin: z.boolean().optional(),
+  scimEnabled: z.boolean().optional(),
+  provisioningMethod: z.enum(["EMAIL", "DOMAIN", "SCIM", "CSV"]).optional(),
+});
+
 export const WorkspaceValidation = {
   personalizeValidationSchema,
   domainInitiateValidationSchema,
   securityValidationSchema,
+  provisioningValidationSchema,
 };

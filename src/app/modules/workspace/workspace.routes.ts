@@ -41,4 +41,11 @@ router.patch(
   WorkspaceController.updateSecuritySettings
 );
 
+// Route 6: Configure Provisioning at Scale (Screen 33)
+router.patch(
+  "/provisioning",
+  validateRequest(WorkspaceValidation.provisioningValidationSchema),
+  WorkspaceController.updateProvisioningSettings
+);
+
 export const WorkspaceRoutes = router;
