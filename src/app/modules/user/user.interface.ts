@@ -39,9 +39,6 @@ export enum IsActive {
 export interface IUser {
   _id?: Types.ObjectId;
   name: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
   email: string;
   password?: string;
   picture?: string;
