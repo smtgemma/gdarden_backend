@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gdarden/gdarden-backend.git"
+    "url": "git+https://github.com/smtgemma/gdarden_backend.git"
   },
   "keywords": [],
   "author": "",
@@ -24,9 +24,9 @@
     "npm": ">=10.0.0"
   },
   "bugs": {
-    "url": "https://github.com/gdarden/gdarden-backend/issues"
+    "url": "https://github.com/smtgemma/gdarden_backend/issues"
   },
-  "homepage": "https://github.com/gdarden/gdarden-backend#readme",
+  "homepage": "https://github.com/smtgemma/gdarden_backend#readme",
   "overrides": {
     "proxy-addr": "^2.0.8"
   },
