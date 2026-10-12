@@ -1,15 +1,5 @@
 import { Types } from "mongoose";
 
-export enum SubscriptionStatus {
-  TRIAL = "TRIAL",
-  ACTIVE = "ACTIVE",
-  PAST_DUE = "PAST_DUE",
-  CANCELED = "CANCELED",
-  UNPAID = "UNPAID",
-  INCOMPLETE = "INCOMPLETE",
-  EXPIRED = "EXPIRED",
-}
-
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
   ORGANIZATION_ADMIN = "ORGANIZATION_ADMIN",
@@ -19,13 +9,20 @@ export enum Role {
 
 export enum AccountType {
   ORGANIZATION = "ORGANIZATION",
-  INDIVIDUAL = "INDIVIDUAL"
+  INDIVIDUAL = "INDIVIDUAL",
 }
 
 export enum AccountStatus {
   PENDING = "PENDING",
   APPROVED = "APPROVED",
   REJECTED = "REJECTED",
+}
+
+export enum OnboardingPath {
+  INDIVIDUAL = "INDIVIDUAL",
+  TEAM = "TEAM",
+  BUSINESS = "BUSINESS",
+  ENTERPRISE = "ENTERPRISE",
 }
 
 export interface IAuthProvider {
@@ -42,29 +39,36 @@ export enum IsActive {
 export interface IUser {
   _id?: Types.ObjectId;
   name: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
   email: string;
   password?: string;
   picture?: string;
+  avatar?: string;
+  jobTitle?: string;
+  primaryFunction?: string;
+  primaryFunctionCustom?: string;
   isDeleted?: boolean;
   isActive?: IsActive;
   isVerified?: boolean;
   role: Role;
-  department: string; 
+  department: string;
   phone?: string;
   companyName?: string;
   accountType: AccountType;
   status: AccountStatus;
   auths: IAuthProvider[];
 
-  // 🔥 Multi-Tenant Data Isolation
-  organizationId?: Types.ObjectId; // The Root Organization Admin's ID
-  createdBy?: Types.ObjectId;      // Who created this account
-  
-  // 🔥 SaaS Subscription Tracking
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
-  subscriptionStatus?: SubscriptionStatus;
-  currentPlan?: Types.ObjectId;
+  // 🚀 OpsOS Workspace & Onboarding Progress
+  workspaceId?: Types.ObjectId;
+  onboardingPath?: OnboardingPath | null;
+  onboardingCurrentStep?: number;
+  isSetupCompleted?: boolean;
+
+  // Multi-Tenant Isolation
+  organizationId?: Types.ObjectId;
+  createdBy?: Types.ObjectId;
 
   createdAt?: Date;
   updatedAt?: Date;
