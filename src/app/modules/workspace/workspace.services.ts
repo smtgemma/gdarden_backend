@@ -221,9 +221,39 @@ const checkDomainVerification = async (userId: string) => {
   };
 };
 
+const updateSecuritySettings = async (
+  userId: string,
+  payload: {
+    requireMFA?: boolean;
+    strictPasswordPolicy?: boolean;
+    ssoEnabled?: boolean;
+    sessionTimeoutMinutes?: number;
+  }
+) => {
+  const user = await User.findById(userId);
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+
+  const workspace = await Workspace.findOne({
+    $or: [{ _id: user.workspaceId }, { ownerId: user._id }],
+    isDeleted: false,
+  });
+
+  if (!workspace) throw new AppError(httpStatus.NOT_FOUND, "Workspace not found");
+
+  workspace.securitySettings = {
+    ...workspace.securitySettings,
+    ...payload,
+  };
+
+  await workspace.save();
+
+  return workspace.securitySettings;
+};
+
 export const WorkspaceServices = {
   getChecklistProgress,
   personalizeWorkspace,
   initiateDomainVerification,
   checkDomainVerification,
+  updateSecuritySettings,
 };

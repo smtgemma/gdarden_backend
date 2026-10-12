@@ -20,7 +20,15 @@ const domainInitiateValidationSchema = z.object({
     .regex(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Please enter a valid domain format (e.g. acme.com)"),
 });
 
+const securityValidationSchema = z.object({
+  requireMFA: z.boolean().optional(),
+  strictPasswordPolicy: z.boolean().optional(),
+  ssoEnabled: z.boolean().optional(),
+  sessionTimeoutMinutes: z.number().positive("Timeout must be a positive number").optional(),
+});
+
 export const WorkspaceValidation = {
   personalizeValidationSchema,
   domainInitiateValidationSchema,
+  securityValidationSchema,
 };

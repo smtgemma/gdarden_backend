@@ -60,9 +60,25 @@ const checkDomainVerification = catchAsync(async (req: Request, res: Response) =
   });
 });
 
+const updateSecuritySettings = catchAsync(async (req: Request, res: Response) => {
+  const decodedToken = req.user as JwtPayload;
+  const result = await WorkspaceServices.updateSecuritySettings(
+    decodedToken.userId,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Security settings updated successfully",
+    data: result,
+  });
+});
+
 export const WorkspaceController = {
   getChecklistProgress,
   personalizeWorkspace,
   initiateDomainVerification,
   checkDomainVerification,
+  updateSecuritySettings,
 };

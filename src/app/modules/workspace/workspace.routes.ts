@@ -34,4 +34,11 @@ router.post(
   WorkspaceController.checkDomainVerification
 );
 
+// Route 5: Configure Security Settings (Screen 32)
+router.patch(
+  "/security",
+  validateRequest(WorkspaceValidation.securityValidationSchema),
+  WorkspaceController.updateSecuritySettings
+);
+
 export const WorkspaceRoutes = router;
