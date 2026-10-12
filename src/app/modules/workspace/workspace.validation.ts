@@ -14,6 +14,13 @@ const personalizeValidationSchema = z.object({
   goals: z.array(z.string().min(1)).optional(),
 });
 
+const domainInitiateValidationSchema = z.object({
+  domain: z
+    .string()
+    .regex(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Please enter a valid domain format (e.g. acme.com)"),
+});
+
 export const WorkspaceValidation = {
   personalizeValidationSchema,
+  domainInitiateValidationSchema,
 };

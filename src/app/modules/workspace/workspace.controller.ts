@@ -32,7 +32,24 @@ const personalizeWorkspace = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const initiateDomainVerification = catchAsync(async (req: Request, res: Response) => {
+  const decodedToken = req.user as JwtPayload;
+  const { domain } = req.body;
+  const result = await WorkspaceServices.initiateDomainVerification(
+    decodedToken.userId,
+    domain
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "DNS verification token generated successfully",
+    data: result,
+  });
+});
+
 export const WorkspaceController = {
   getChecklistProgress,
   personalizeWorkspace,
+  initiateDomainVerification,
 };

@@ -21,4 +21,11 @@ router.post(
   WorkspaceController.personalizeWorkspace
 );
 
+// Route 3: Initiate Domain Verification (Screen 30)
+router.post(
+  "/verify-domain/initiate",
+  validateRequest(WorkspaceValidation.domainInitiateValidationSchema),
+  WorkspaceController.initiateDomainVerification
+);
+
 export const WorkspaceRoutes = router;

@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import httpStatus from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { User } from "../user/user.model";
@@ -133,7 +134,41 @@ const personalizeWorkspace = async (
   return workspace.personalization;
 };
 
+const initiateDomainVerification = async (userId: string, domain: string) => {
+  const user = await User.findById(userId);
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+
+  const workspace = await Workspace.findOne({
+    $or: [{ _id: user.workspaceId }, { ownerId: user._id }],
+    isDeleted: false,
+  });
+
+  if (!workspace) throw new AppError(httpStatus.NOT_FOUND, "Workspace not found");
+
+  const cleanDomain = domain.toLowerCase().trim().replace(/^@/, "");
+  const token = `opsos-verification=${crypto.randomBytes(16).toString("hex")}`;
+
+  workspace.organization = {
+    ...workspace.organization,
+    primaryDomain: cleanDomain,
+    domainVerified: false,
+    domainVerificationToken: token,
+  };
+
+  await workspace.save();
+
+  return {
+    domain: cleanDomain,
+    verificationMethod: "DNS_TXT",
+    recordType: "TXT",
+    recordHost: "@",
+    recordValue: token,
+    instructions: `Add a DNS TXT record with host '@' (or '${cleanDomain}') and value '${token}'. Once added, click 'Verify DNS Record'.`,
+  };
+};
+
 export const WorkspaceServices = {
   getChecklistProgress,
   personalizeWorkspace,
+  initiateDomainVerification,
 };
