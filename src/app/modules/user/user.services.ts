@@ -274,9 +274,9 @@ const updateMyProfile = async ({
       throw new AppError(400, "All password fields are required");
     }
 
-    const isStrongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(newPassword);
+    const isStrongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/.test(newPassword);
     if (!isStrongPassword) {
-      throw new AppError(400, "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+      throw new AppError(400, "Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character");
     }
 
     if (newPassword !== confirmPassword) {
