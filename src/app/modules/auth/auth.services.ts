@@ -1,4 +1,5 @@
 
+import crypto from "crypto";
 import bcryptjs from "bcryptjs";
 import httpStatus from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
@@ -6,19 +7,79 @@ import { envVars } from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import { sendEmail } from "../../utils/sendEmail";
 import { createNewAccessTokenWithRefreshToken } from "../../utils/userTokens";
-import { IAuthProvider } from "../user/user.interface";
+import { AccountStatus, AccountType, IAuthProvider, Role } from "../user/user.interface";
 import { User } from "../user/user.model";
 import { redisClient } from "../../config/redis.config";
 import { generateOtp } from "../otp/otp.service";
 
-const getNewAccessToken = async (refreshToken: string) => {
-  const newAccessToken = await createNewAccessTokenWithRefreshToken(refreshToken)
+interface IRegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  agreeTerms?: boolean;
+}
 
-  return {
-    accessToken: newAccessToken
+const registerUser = async (payload: IRegisterPayload) => {
+  const { name, email, password } = payload;
+
+  const isUserExist = await User.findOne({ email });
+  if (isUserExist) {
+    throw new AppError(httpStatus.CONFLICT, "An account with this email already exists");
   }
 
-}
+  const hashedPassword = await bcryptjs.hash(
+    password,
+    Number(envVars.BCRYPT_SALT_ROUND || 10)
+  );
+
+  const authProvider: IAuthProvider = {
+    provider: "credentials",
+    providerId: email,
+  };
+
+  const user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+    role: Role.USER,
+    accountType: AccountType.INDIVIDUAL,
+    status: AccountStatus.APPROVED,
+    isVerified: false,
+    auths: [authProvider],
+  });
+
+  const otp = generateOtp();
+  const redisKey = `otp:${email}`;
+
+  await redisClient.set(redisKey, otp, {
+    expiration: { type: "EX", value: 120 },
+  });
+
+  await sendEmail({
+    to: email,
+    subject: "Verify Your Email - Gdarden",
+    templateName: "otp",
+    templateData: {
+      name: user.name,
+      otp,
+      senderName: "Gdarden Team",
+    },
+  });
+
+  const { password: _, ...userWithoutPassword } = user.toObject();
+
+  return {
+    user: userWithoutPassword,
+  };
+};
+
+const getNewAccessToken = async (refreshToken: string) => {
+  const newAccessToken = await createNewAccessTokenWithRefreshToken(refreshToken);
+
+  return {
+    accessToken: newAccessToken,
+  };
+};
 
 const resetPassword = async (
   email: string,
@@ -152,31 +213,69 @@ const setPassword = async (userId: string, plainPassword: string) => {
 
 }
 const changePassword = async (oldPassword: string, newPassword: string, confirmPassword: string, decodedToken: JwtPayload) => {
-  const isStrongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(newPassword);
+  const isStrongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/.test(newPassword);
   if (!isStrongPassword) {
-    throw new AppError(400, "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+    throw new AppError(400, "Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character");
   }
   if (newPassword !== confirmPassword) {
     throw new AppError(400, "Passwords do not match");
   }
-  const user = await User.findById(decodedToken.userId)
+  const user = await User.findById(decodedToken.userId);
 
-  const isOldPasswordMatch = await bcryptjs.compare(oldPassword, user!.password as string)
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  const isOldPasswordMatch = await bcryptjs.compare(oldPassword, user.password as string);
   if (!isOldPasswordMatch) {
     throw new AppError(httpStatus.UNAUTHORIZED, "Old Password does not match");
   }
 
-  user!.password = await bcryptjs.hash(newPassword, Number(envVars.BCRYPT_SALT_ROUND))
+  user.password = await bcryptjs.hash(newPassword, Number(envVars.BCRYPT_SALT_ROUND));
 
-  user!.save();
+  await user.save();
+};
 
+const verifyResetOtp = async (email: string, otp: string) => {
+  const redisKey = `otp:reset:${email}`;
+  const savedOtp = await redisClient.get(redisKey);
 
-}
+  if (!savedOtp) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Verification code has expired or does not exist");
+  }
+
+  if (String(savedOtp) !== String(otp)) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid verification code");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const tokenId = crypto.randomUUID();
+  const resetToken = jwt.sign(
+    { email, userId: user._id, tokenId, purpose: "password_reset" },
+    envVars.JWT_PASSWORD_RESET_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  await redisClient.set(`resetToken:${tokenId}`, email, {
+    expiration: { type: "EX", value: 900 },
+  });
+
+  await redisClient.del(redisKey);
+
+  return { resetToken };
+};
 
 export const AuthServices = {
+  registerUser,
   getNewAccessToken,
   changePassword,
   setPassword,
   forgotPassword,
-  resetPassword
-}
+  verifyResetOtp,
+  resetPassword,
+};

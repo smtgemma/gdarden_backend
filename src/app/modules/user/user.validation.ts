@@ -3,7 +3,7 @@ import { AccountType, IsActive, Role } from "./user.interface";
 
 export const strongPasswordSchema = z
   .string()
-  .min(8, { message: "Password must be at least 8 characters long." })
+  .min(12, { message: "Password must be at least 12 characters long." })
   .regex(/[A-Z]/, { message: "Password must contain at least 1 uppercase letter." })
   .regex(/[a-z]/, { message: "Password must contain at least 1 lowercase letter." })
   .regex(/[0-9]/, { message: "Password must contain at least 1 number." })

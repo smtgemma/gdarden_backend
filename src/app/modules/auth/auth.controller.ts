@@ -13,6 +13,19 @@ import { createUserTokens } from "../../utils/userTokens";
 import { AuthServices } from "./auth.services";
 import { AccountStatus } from "../user/user.interface";
 
+const registerUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await AuthServices.registerUser(req.body);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.CREATED,
+      message: "Account created successfully. Please verify your email with the 6-digit verification code sent.",
+      data: result,
+    });
+  }
+);
+
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate("local", async (err: any, user: any, info: any) => {
@@ -159,6 +172,19 @@ const forgotPassword = catchAsync(
     });
   }
 );
+const verifyResetOtp = catchAsync(async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+
+  const result = await AuthServices.verifyResetOtp(email, otp);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Identity verified successfully. You can now reset your password.",
+    data: result,
+  });
+});
+
 const googleCallbackController = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     let redirectTo = req.query.state ? (req.query.state as string) : "";
@@ -182,12 +208,14 @@ const googleCallbackController = catchAsync(
 );
 
 export const AuthControllers = {
+  registerUser,
   credentialsLogin,
   getNewAccessToken,
   logout,
   resetPassword,
   setPassword,
   forgotPassword,
+  verifyResetOtp,
   changePassword,
   googleCallbackController,
 };
