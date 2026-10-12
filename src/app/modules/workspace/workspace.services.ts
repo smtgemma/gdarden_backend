@@ -101,6 +101,39 @@ const getChecklistProgress = async (userId: string) => {
   };
 };
 
+const personalizeWorkspace = async (
+  userId: string,
+  payload: {
+    workStyle?: any;
+    notificationPrefs?: any;
+    goals?: string[];
+  }
+) => {
+  const user = await User.findById(userId);
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+
+  const workspace = await Workspace.findOne({
+    $or: [{ _id: user.workspaceId }, { ownerId: user._id }],
+    isDeleted: false,
+  });
+
+  if (!workspace) throw new AppError(httpStatus.NOT_FOUND, "Workspace not found");
+
+  workspace.personalization = {
+    ...workspace.personalization,
+    ...payload,
+    notificationPrefs: {
+      ...workspace.personalization?.notificationPrefs,
+      ...payload.notificationPrefs,
+    },
+  };
+
+  await workspace.save();
+
+  return workspace.personalization;
+};
+
 export const WorkspaceServices = {
   getChecklistProgress,
+  personalizeWorkspace,
 };

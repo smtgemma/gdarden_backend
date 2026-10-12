@@ -17,6 +17,22 @@ const getChecklistProgress = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const personalizeWorkspace = catchAsync(async (req: Request, res: Response) => {
+  const decodedToken = req.user as JwtPayload;
+  const result = await WorkspaceServices.personalizeWorkspace(
+    decodedToken.userId,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Workspace personalization updated successfully",
+    data: result,
+  });
+});
+
 export const WorkspaceController = {
   getChecklistProgress,
+  personalizeWorkspace,
 };
