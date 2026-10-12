@@ -4,21 +4,23 @@ import { sendResponse } from "../../utils/sendResponse";
 import { OTPService } from "./otp.service";
 import httpStatus from 'http-status-codes';
 
+import { setAuthCookie } from "../../utils/setCookie";
+
 const verifySignupOtp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, otp } = req.body;
 
-    const user = await OTPService.verifySignupOtp(email, otp);
+    const result = await OTPService.verifySignupOtp(email, otp);
+
+    if (result.tokens) {
+      setAuthCookie(res, result.tokens);
+    }
 
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
-      message: "OTP verified successfully",
-      data: {
-        id: user._id,
-        email: user.email,
-        isVerified: user.isVerified,
-      },
+      message: "Email verified successfully. You can now proceed with your profile setup.",
+      data: result,
     });
   }
 );
