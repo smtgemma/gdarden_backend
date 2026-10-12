@@ -70,18 +70,12 @@ app.use(
   cors({
     origin: function (origin, callback) {
       const allowedOrigins = [
-        "https://gdarden.com",
-        "https://dashboard.gdarden.com",
-        "https://www.gdarden.com",
         envVars.FRONTEND_URL,
         envVars.FRONTEND_LOCALHOST_URL,
         envVars.DASHBOARD_URL,
         envVars.DASHBOARD_LOCALHOST_URL,
         envVars.FRONTEND_DOMAIN_URL,
-        envVars.DASHBOARD_DOMAIN_URL,
-        'http://localhost',
-        'https://localhost',
-        'capacitor://localhost'
+        envVars.DASHBOARD_DOMAIN_URL
       ];
 
       const isLocalhost = origin ? /^https?:\/\/localhost(:\d+)?$/.test(origin) : false;
