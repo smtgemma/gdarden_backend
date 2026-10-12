@@ -48,8 +48,21 @@ const initiateDomainVerification = catchAsync(async (req: Request, res: Response
   });
 });
 
+const checkDomainVerification = catchAsync(async (req: Request, res: Response) => {
+  const decodedToken = req.user as JwtPayload;
+  const result = await WorkspaceServices.checkDomainVerification(decodedToken.userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
 export const WorkspaceController = {
   getChecklistProgress,
   personalizeWorkspace,
   initiateDomainVerification,
+  checkDomainVerification,
 };

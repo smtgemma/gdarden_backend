@@ -28,4 +28,10 @@ router.post(
   WorkspaceController.initiateDomainVerification
 );
 
+// Route 4: Check Domain Verification (Screen 30)
+router.post(
+  "/verify-domain/check",
+  WorkspaceController.checkDomainVerification
+);
+
 export const WorkspaceRoutes = router;

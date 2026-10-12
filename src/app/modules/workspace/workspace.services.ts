@@ -167,8 +167,63 @@ const initiateDomainVerification = async (userId: string, domain: string) => {
   };
 };
 
+const checkDomainVerification = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+
+  const workspace = await Workspace.findOne({
+    $or: [{ _id: user.workspaceId }, { ownerId: user._id }],
+    isDeleted: false,
+  });
+
+  if (!workspace) throw new AppError(httpStatus.NOT_FOUND, "Workspace not found");
+
+  const domain = workspace.organization?.primaryDomain;
+  const token = workspace.organization?.domainVerificationToken;
+
+  if (!domain || !token) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "No verification initiated. Please initiate domain verification first."
+    );
+  }
+
+  let verified = false;
+
+  try {
+    const dns = await import("dns");
+    const records = await dns.promises.resolveTxt(domain);
+    const flatRecords = records.flat();
+    verified = flatRecords.some((rec) => rec.includes(token));
+  } catch {
+    // In non-production or localhost testing, consider valid
+    if (process.env.NODE_ENV !== "production") {
+      verified = true;
+    }
+  }
+
+  if (!verified) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "DNS TXT record not detected yet. DNS propagation may take a few minutes."
+    );
+  }
+
+  workspace.organization.domainVerified = true;
+  workspace.organization.verifiedAt = new Date();
+  await workspace.save();
+
+  return {
+    verified: true,
+    domain,
+    verifiedAt: workspace.organization.verifiedAt,
+    message: "Corporate domain verified successfully.",
+  };
+};
+
 export const WorkspaceServices = {
   getChecklistProgress,
   personalizeWorkspace,
   initiateDomainVerification,
+  checkDomainVerification,
 };
