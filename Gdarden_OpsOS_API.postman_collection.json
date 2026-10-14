@@ -1,0 +1,723 @@
+{
+  "info": {
+    "_postman_id": "gdarden-opsos-api-collection-2026",
+    "name": "Gdarden (OpsOS) API Collection",
+    "description": "Comprehensive Postman Collection for Gdarden (OpsOS) Backend API. Includes Authentication, Email Verification & OTP, Onboarding & Workspace Setup (Individual, Team, Business, Enterprise), and Post-Setup Management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:7000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resetToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testEmail",
+      "value": "alex.rivera@acmeops.com",
+      "type": "string"
+    },
+    {
+      "key": "departmentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "description": "Endpoints for registration, login, password recovery and token refresh (Design Images 1 & 2)",
+      "item": [
+        {
+          "name": "1. Register Account (Screen 07)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alex Rivera\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"SecurePass123!@#\",\n  \"confirmPassword\": \"SecurePass123!@#\",\n  \"agreeTerms\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registers a new user with 12+ character password rule and sends a 6-digit verification code to the email."
+          }
+        },
+        {
+          "name": "2. Login with Credentials (Screen 06)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (pm.cookies.get('accessToken')) {",
+                  "        pm.collectionVariables.set('accessToken', pm.cookies.get('accessToken'));",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"SecurePass123!@#\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates user with work email and password, setting secure auth cookies."
+          }
+        },
+        {
+          "name": "3. Forgot Password - Send OTP (Screen 09)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Sends a 6-digit identity verification code to the user's email for password recovery."
+          }
+        },
+        {
+          "name": "4. Verify Identity OTP (Screen 10)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.resetToken) {",
+                  "        pm.collectionVariables.set('resetToken', json.data.resetToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-reset-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-reset-otp"]
+            },
+            "description": "Verifies 6-digit identity OTP and generates a single-use resetToken (valid for 15 minutes)."
+          }
+        },
+        {
+          "name": "5. Reset Password (Screen 11 & 12)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"newPassword\": \"NewSecurePass2026!#\",\n  \"confirmPassword\": \"NewSecurePass2026!#\",\n  \"resetToken\": \"{{resetToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "description": "Sets new 12+ character password using the single-use reset token."
+          }
+        },
+        {
+          "name": "6. Change Password (Authenticated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"SecurePass123!@#\",\n  \"newPassword\": \"NewSecurePass2026!#\",\n  \"confirmPassword\": \"NewSecurePass2026!#\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-password"]
+            },
+            "description": "Allows an authenticated user to change their existing password."
+          }
+        },
+        {
+          "name": "7. Refresh Access Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh-token"]
+            },
+            "description": "Exchanges refreshToken cookie for a new accessToken."
+          }
+        },
+        {
+          "name": "8. Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Clears auth cookies and logs user out."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Email Verification & OTP",
+      "description": "Endpoints for email verification code verification and resending (Screen 08 & 08.1)",
+      "item": [
+        {
+          "name": "1. Verify Signup Email OTP (Screen 08)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.tokens && json.data.tokens.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', json.data.tokens.accessToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/otp/verify-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["otp", "verify-email"]
+            },
+            "description": "Verifies registration OTP, marks account as verified, and immediately returns session tokens so user can proceed directly to profile setup."
+          }
+        },
+        {
+          "name": "2. Resend Email Verification OTP",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/otp/resend",
+              "host": ["{{baseUrl}}"],
+              "path": ["otp", "resend"]
+            },
+            "description": "Resends 6-digit registration verification code with 2-minute spam protection cooldown."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Onboarding & Setup Flow (Screens 13–37)",
+      "description": "8-Step Onboarding process supporting Individual, Team, Business, and Enterprise tiers (Design Images 3–9)",
+      "item": [
+        {
+          "name": "Step 0: Get Current Onboarding State",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setup/state",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "state"]
+            },
+            "description": "Returns current onboarding step, active tier, and saved draft workspace configuration."
+          }
+        },
+        {
+          "name": "Step 1: Create Profile (Screen 13 & 13.1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alex Rivera\",\n  \"jobTitle\": \"Director of Operations\",\n  \"primaryFunction\": \"Operations\",\n  \"avatar\": \"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "profile"]
+            },
+            "description": "Configures user name, job title, and primary function (Operations, IT, HR, etc.) or custom function. Advances to Step 2."
+          }
+        },
+        {
+          "name": "Step 2: Choose Path (Screen 14 & 14.1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"ENTERPRISE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/path",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "path"]
+            },
+            "description": "Selects onboarding path tier: INDIVIDUAL (5 steps), TEAM (7 steps), BUSINESS (8 steps), or ENTERPRISE (8 steps)."
+          }
+        },
+        {
+          "name": "Step 3 (Team): Workspace & Team Name (Screen 19)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workspaceName\": \"Rivera Operations\",\n  \"teamName\": \"Site Logistics Team\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/team-workspace",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "team-workspace"]
+            },
+            "description": "For TEAM path: sets workspace name and initial team name."
+          }
+        },
+        {
+          "name": "Step 3 (Business & Enterprise): Organization Info (Screen 24 & 31)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationName\": \"Acme Global Industries\",\n  \"industry\": \"Manufacturing\",\n  \"size\": \"251-1,000\",\n  \"primaryDomain\": \"acme.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/organization",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "organization"]
+            },
+            "description": "For BUSINESS & ENTERPRISE paths: sets organization name, industry, size, and primary domain."
+          }
+        },
+        {
+          "name": "Step 4 (Business & Enterprise): Setup Departments & Teams (Screen 25 & 34)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.departments && json.data.departments.length > 0) {",
+                  "        pm.collectionVariables.set('departmentId', json.data.departments[0]._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"departments\": [\n    {\n      \"departmentName\": \"Operations\",\n      \"description\": \"Core plant and field operations\",\n      \"teams\": [\"Maintenance\", \"Logistics & Fleet\", \"Facilities\"]\n    },\n    {\n      \"departmentName\": \"Technology & IT\",\n      \"description\": \"Infrastructure and automation systems\",\n      \"teams\": [\"Infrastructure\", \"Systems Engineering\"]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/departments-teams",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "departments-teams"]
+            },
+            "description": "Maps departments and operational sub-teams for the organization hierarchy."
+          }
+        },
+        {
+          "name": "Step 4: View Departments & Teams",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setup/departments-teams",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "departments-teams"]
+            },
+            "description": "Retrieves created departments and teams under this workspace."
+          }
+        },
+        {
+          "name": "Step 4: Delete Department by ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setup/departments/{{departmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "departments", "{{departmentId}}"]
+            },
+            "description": "Soft-deletes a department and its mapped teams."
+          }
+        },
+        {
+          "name": "Step 5 (or 3/4): Choose Modules (Screen 16, 20, 26, 35)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modules\": [\n    \"Tasks\",\n    \"Teams\",\n    \"Assets\",\n    \"Documents\",\n    \"Inventory\",\n    \"Reports\",\n    \"Calendar\",\n    \"Chat\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/modules",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "modules"]
+            },
+            "description": "Enables operational modules for the workspace."
+          }
+        },
+        {
+          "name": "Step 6 (or 5): Invite Members (Screen 21, 27, 27.1, 27.2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"members\": [\n    {\n      \"email\": \"sarah.chen@acme.com\",\n      \"name\": \"Sarah Chen\",\n      \"accessLevel\": \"Manager\",\n      \"jobRole\": \"Maintenance Supervisor\"\n    },\n    {\n      \"email\": \"marcus.vance@acme.com\",\n      \"name\": \"Marcus Vance\",\n      \"accessLevel\": \"Member\",\n      \"jobRole\": \"Field Technician\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/invitations",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "invitations"]
+            },
+            "description": "Sends member invitations with assigned roles (Administrator, Manager, Member) and 7-day token expiry."
+          }
+        },
+        {
+          "name": "Step 7 (or 4/6): AI Control & Governance (Screen 17, 22, 28, 36)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"globalLevel\": \"APPROVAL_REQUIRED\",\n  \"governance\": {\n    \"incidentAnalysis\": \"AUTONOMOUS\",\n    \"autoCalibration\": \"APPROVAL_REQUIRED\",\n    \"inventoryRestock\": \"APPROVAL_REQUIRED\",\n    \"taskReassignment\": \"SUGGEST_ONLY\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/ai-governance",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "ai-governance"]
+            },
+            "description": "Sets AI autonomy level (Suggest Only, Approval Required, Autonomous) and granular capability rules."
+          }
+        },
+        {
+          "name": "Step 8: Complete Setup & Launch Workspace (Screen 18, 23, 29, 37)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setup/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "complete"]
+            },
+            "description": "Finalizes onboarding, sets isSetupCompleted = true, and unlocks the workspace."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Post-Setup Management (Screen 38.8–33)",
+      "description": "Workspace settings, dynamic setup checklist tracker (Screen 38.8 & 38.9), personalization (Screen 15), domain verification (Screen 30), security controls (Screen 32), and provisioning (Screen 33)",
+      "item": [
+        {
+          "name": "1. Get Setup Checklist Progress (Screen 38.8 & 38.9)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workspace/checklist",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "checklist"]
+            },
+            "description": "Returns real-time setup progress dynamically adapted for Standard (Screen 38.8 - 9 items) and Enterprise (Screen 38.9 - 10 items) workspaces."
+          }
+        },
+        {
+          "name": "2. Toggle Checklist Visibility (Screen 38.8 & 38.9 - Hide/Show)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hidden\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workspace/checklist/visibility",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "checklist", "visibility"]
+            },
+            "description": "Toggles visibility of checklist from Home dashboard ('Hide checklist' button)."
+          }
+        },
+        {
+          "name": "3. Update Checklist Item Status (Dynamic Item Toggle)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workspace/checklist/item/add_assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "checklist", "item", "add_assets"]
+            },
+            "description": "Dynamically marks checklist items (e.g. add_assets, upload_documents, review_roles, advanced_permissions) as complete or pending."
+          }
+        },
+        {
+          "name": "4. Personalize Workspace (Screen 15)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workStyle\": \"HYBRID\",\n  \"notificationPrefs\": {\n    \"assignedWork\": true,\n    \"teamUpdates\": true,\n    \"dueDates\": true,\n    \"incidents\": true\n  },\n  \"goals\": [\n    \"Asset Reliability\",\n    \"Team Productivity\",\n    \"Cost Reduction\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workspace/personalize",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "personalize"]
+            },
+            "description": "Configures personal routines, 4 notification toggles, and 7 goal tags (Screen 15)."
+          }
+        },
+        {
+          "name": "5. Initiate Domain Verification (Screen 30)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": \"acme.com\",\n  \"verificationMethod\": \"BOTH\",\n  \"adminEmail\": \"admin@acme.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workspace/verify-domain/initiate",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "verify-domain", "initiate"]
+            },
+            "description": "Initiates domain verification with DNS TXT record and/or Domain Admin confirmation email."
+          }
+        },
+        {
+          "name": "6. Verify Domain DNS Record (Screen 30)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workspace/verify-domain/check",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "verify-domain", "check"]
+            },
+            "description": "Validates DNS TXT record for corporate domain ownership."
+          }
+        },
+        {
+          "name": "7. Confirm Domain by Admin Email Token (Screen 30)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"replace-with-domain-admin-token\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workspace/verify-domain/confirm-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "verify-domain", "confirm-email"]
+            },
+            "description": "Confirms domain ownership via admin email confirmation link."
+          }
+        },
+        {
+          "name": "8. Configure Security Policies (Screen 32)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requireMFA\": true,\n  \"strictPasswordPolicy\": true,\n  \"ssoEnabled\": true,\n  \"sessionTimeoutMinutes\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workspace/security",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "security"]
+            },
+            "description": "Configures Multi-Factor Authentication enforcement, strict password policies, SSO preparation, and session timeouts."
+          }
+        },
+        {
+          "name": "9. Configure Provisioning at Scale (Screen 33)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scimEnabled\": true,\n  \"allowDomainAutoJoin\": true,\n  \"bulkCsvEnabled\": true,\n  \"selectedMethods\": [\"SCIM\", \"DOMAIN\", \"CSV\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workspace/provisioning",
+              "host": ["{{baseUrl}}"],
+              "path": ["workspace", "provisioning"]
+            },
+            "description": "Configures multi-select provisioning methods (SCIM, Domain-based auto-join, and Bulk CSV upload)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. User Profile",
+      "description": "User profile management endpoints",
+      "item": [
+        {
+          "name": "1. Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "me"]
+            },
+            "description": "Returns current logged in user profile with linked workspace and onboarding status."
+          }
+        },
+        {
+          "name": "2. Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alex Rivera Senior\",\n  \"phone\": \"01712345678\",\n  \"companyName\": \"Acme Global Industries\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/update-my-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "update-my-profile"]
+            },
+            "description": "Updates personal user details."
+          }
+        }
+      ]
+    }
+  ]
+}

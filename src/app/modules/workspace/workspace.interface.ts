@@ -31,6 +31,7 @@ export interface IWorkspaceSecuritySettings {
   strictPasswordPolicy: boolean;
   ssoEnabled: boolean;
   sessionTimeoutMinutes: number;
+  isConfigured?: boolean;
 }
 
 export interface IWorkspaceOrganization {
@@ -41,6 +42,10 @@ export interface IWorkspaceOrganization {
   primaryDomain?: string;
   domainVerified?: boolean;
   domainVerificationToken?: string;
+  adminEmail?: string;
+  adminEmailVerificationToken?: string;
+  adminEmailVerificationExpires?: Date;
+  verificationMethod?: "DNS_TXT" | "EMAIL_ADMIN" | "BOTH";
   verifiedAt?: Date;
 }
 
@@ -53,12 +58,26 @@ export interface IWorkspacePersonalization {
     incidents: boolean;
   };
   goals?: string[];
+  isConfigured?: boolean;
 }
 
 export interface IWorkspaceProvisioning {
   allowDomainAutoJoin: boolean;
   scimEnabled: boolean;
+  bulkCsvEnabled?: boolean;
+  selectedMethods?: ("SCIM" | "DOMAIN" | "CSV" | "EMAIL")[];
+  isConfigured?: boolean;
   provisioningMethod?: "EMAIL" | "DOMAIN" | "SCIM" | "CSV";
+}
+
+export interface IWorkspaceChecklistStatus {
+  hidden?: boolean;
+  addAssetsCompleted?: boolean;
+  uploadDocumentsCompleted?: boolean;
+  rolesReviewed?: boolean;
+  advancedPermissionsCompleted?: boolean;
+  notificationsConfigured?: boolean;
+  completedCustomItemIds?: string[];
 }
 
 export interface IWorkspace {
@@ -76,6 +95,7 @@ export interface IWorkspace {
   securitySettings: IWorkspaceSecuritySettings;
   provisioning: IWorkspaceProvisioning;
   personalization?: IWorkspacePersonalization;
+  checklistStatus?: IWorkspaceChecklistStatus;
   isCompleted: boolean;
   isDeleted?: boolean;
   createdAt?: Date;

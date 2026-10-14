@@ -4,10 +4,10 @@
   "description": "Gdarden Backend System",
   "main": "index.js",
   "scripts": {
-    "start": "node ./dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
+    "start": "node api.js && node ./dist/server.js",
+    "dev": "node api.js && ts-node-dev --respawn --transpile-only ./src/server.ts",
     "seed": "ts-node ./src/app/scripts/seed.ts",
-    "build": "tsc && node -e \"require('fs').cpSync('src/app/utils/templates', 'dist/app/utils/templates', { recursive: true, force: true })\"",
+    "build": "node api.js && tsc && node -e \"require('fs').cpSync('src/app/utils/templates', 'dist/app/utils/templates', { recursive: true, force: true })\"",
     "lint": "eslint ./src --ext .ts",
     "test": "jest --runInBand"
   },
