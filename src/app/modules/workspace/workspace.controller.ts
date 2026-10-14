@@ -17,6 +17,40 @@ const getChecklistProgress = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const toggleChecklistVisibility = catchAsync(async (req: Request, res: Response) => {
+  const decodedToken = req.user as JwtPayload;
+  const { hidden } = req.body;
+  const result = await WorkspaceServices.toggleChecklistVisibility(
+    decodedToken.userId,
+    hidden
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
+const updateChecklistItemStatus = catchAsync(async (req: Request, res: Response) => {
+  const decodedToken = req.user as JwtPayload;
+  const { itemId } = req.params;
+  const { completed } = req.body;
+  const result = await WorkspaceServices.updateChecklistItemStatus(
+    decodedToken.userId,
+    itemId,
+    completed
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Checklist item '${itemId}' status updated successfully`,
+    data: result,
+  });
+});
+
 const personalizeWorkspace = catchAsync(async (req: Request, res: Response) => {
   const decodedToken = req.user as JwtPayload;
   const result = await WorkspaceServices.personalizeWorkspace(
@@ -34,16 +68,15 @@ const personalizeWorkspace = catchAsync(async (req: Request, res: Response) => {
 
 const initiateDomainVerification = catchAsync(async (req: Request, res: Response) => {
   const decodedToken = req.user as JwtPayload;
-  const { domain } = req.body;
   const result = await WorkspaceServices.initiateDomainVerification(
     decodedToken.userId,
-    domain
+    req.body
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "DNS verification token generated successfully",
+    message: result.message,
     data: result,
   });
 });
@@ -51,6 +84,22 @@ const initiateDomainVerification = catchAsync(async (req: Request, res: Response
 const checkDomainVerification = catchAsync(async (req: Request, res: Response) => {
   const decodedToken = req.user as JwtPayload;
   const result = await WorkspaceServices.checkDomainVerification(decodedToken.userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
+const confirmDomainByEmail = catchAsync(async (req: Request, res: Response) => {
+  const decodedToken = req.user as JwtPayload;
+  const { token } = req.body;
+  const result = await WorkspaceServices.confirmDomainByEmail(
+    decodedToken.userId,
+    token
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -70,7 +119,7 @@ const updateSecuritySettings = catchAsync(async (req: Request, res: Response) =>
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Security settings updated successfully",
+    message: result.message,
     data: result,
   });
 });
@@ -85,16 +134,19 @@ const updateProvisioningSettings = catchAsync(async (req: Request, res: Response
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Provisioning settings updated successfully",
+    message: result.message,
     data: result,
   });
 });
 
 export const WorkspaceController = {
   getChecklistProgress,
+  toggleChecklistVisibility,
+  updateChecklistItemStatus,
   personalizeWorkspace,
   initiateDomainVerification,
   checkDomainVerification,
+  confirmDomainByEmail,
   updateSecuritySettings,
   updateProvisioningSettings,
 };
